@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+<main class="home-main">
+    <div class="login-box">
+        <h1>Buy Stocks</h1>
+        <form action="{{ url_for('buy') }}" method="post">
+            <label for="symbol">Stock Symbol</label><br>
+            <input type="text" id="symbol" name="symbol" placeholder="e.g. AAPL"><br>
+
+            <label for="shares">Shares</label><br>
+            <input type="number" id="shares" name="shares" placeholder="Number of shares"><br>
+
+            <label for="price">Price per share</label><br>
+            <input type="text" id="price" name="price" placeholder="e.g. 200.00"><br>
+            <button type="button" onclick="fetchPrice()">Get Current Price</button><br><br>
+
+            <button type="submit">Buy</button>
+            <a class="button" href="{{ url_for('portfolio') }}">Back to portfolio</a>
+        </form>
+    </div>
+</main>
+<script>
+async function fetchPrice() {
+    const symbol = document.getElementById('symbol').value.trim();
+    if (!symbol) {
+        alert('Please enter a stock symbol first.');
+        return;
+    }
+    try {
+        const response = await fetch(`/get_price/${symbol}`);
+        const data = await response.json();
+        if (data.price) {
+            document.getElementById('price').value = data.price.toFixed(2);
+        } else {
+            alert('Unable to fetch price: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Error fetching price: ' + error.message);
+    }
+}
+</script>
+{% endblock content %}

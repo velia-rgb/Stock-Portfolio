@@ -5,6 +5,7 @@
         <section class="top-sections">
             <!-- when connected with backend, use <button></button> instead of <a></a> -->
             <!-- <button action = "/holdings" method = "post">Add Portfolio</button> -->
+            <h1>{{ portfolio.name }}</h1>
             <a href="{{ url_for('create_portfolio')}}" class="btn">Add Portfolio</a>            
             <a href="/delete-portfolio" class="btn">Delete Portfolio</a>
         </section>
@@ -16,42 +17,83 @@
         <section class="summary-card">
             <div>
                 <h3>Stock Capital</h3>
-                <p>$0.00</p>
+                <p>${{ "%.2f"|format(total_value or 0) }}</p>
             </div>
             <div>
                 <h3>Remaining Cash</h3>
-                <p>$0.00</p>
+                <p>${{ "%.2f"|format(portfolio.cash) }}</p>
             </div>
             <div>
                 <h3>Profit/Loss</h3>
-                <p>+$0.00</p>
+                <p>${{ "%.2f"|format(total_pl or 0) }}</p>
             </div>
         </section>
         <section class="holdings-section">
             <div class="holdings-title-row">
                 <h2>Holdings</h2>
                 <div class="trade-buttons">
-                <a href="/buy" class="btn">Buy</a>
-                <a href="/sell" class="btn">Sell</a>
+                    <a href="{{ url_for('buy') }}" class="btn">Buy</a>
+                    <a href="{{ url_for('sell') }}" class="btn">Sell</a>
                 </div>
             </div>
             <div class="table">
                 <div class="table-row table-header">
-                    <p>Stock Name</p>
-                    <p>Stock Price</p>
-                    <p>Stock Shares</p>
-                    <p>Holding Value</p>
-                    <p>Profit/Loss</p>
+                    <p>Stock</p>
+                    <p>Shares</p>
+                    <p>Avg Price</p>
+                    <p>Current Price</p>
+                    <p>Current Value</p>
+                    <p>P/L</p>
                 </div>
-                <div class="table-row">
-                    <p>AAPL</p>
-                    <p>$200</p>
-                    <p>0</p>
-                    <p>$0</p>
-                    <p>+$0</p>
-                </div>
+                {% if holdings %}
+                    {% for holding in holdings %}
+                        <div class="table-row">
+                            <p>{{ holding.symbol }}</p>
+                            <p>{{ holding.shares }}</p>
+                            <p>${{ "%.2f" | format(holding.avg_price) }}</p>
+                            <p>{% if holding.current_price %}${{ "%.2f" | format(holding.current_price) }}{% else %}N/A{% endif %}</p>
+                            <p>{% if holding.current_value %}${{ "%.2f" | format(holding.current_value) }}{% else %}N/A{% endif %}</p>
+                            <p>{% if holding.pl %}${{ "%.2f" | format(holding.pl) }}{% else %}N/A{% endif %}</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="table-row">
+                        <p colspan="6">No holdings yet. Use Buy to add a position.</p>
+                    </div>
+                {% endif %}
             </div>
         </section>
-  </main>
+        <section class="holdings-section">
+            <div class="holdings-title-row">
+                <h2>Transaction History</h2>
+            </div>
+            <div class="table">
+                <div class="table-row table-header">
+                    <p>Date & Time</p>
+                    <p>Symbol</p>
+                    <p>Type</p>
+                    <p>Shares</p>
+                    <p>Price</p>
+                    <p>P/L</p>
+                </div>
+                {% if transactions %}
+                    {% for txn in transactions %}
+                        <div class="table-row">
+                            <p>{{ txn.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                            <p>{{ txn.symbol }}</p>
+                            <p>{{ txn.type }}</p>
+                            <p>{{ txn.shares }}</p>
+                            <p>${{ "%.2f" | format(txn.price) }}</p>
+                            <p>{% if txn.type == 'SELL' and txn.cost_basis %}${{ "%.2f" | format((txn.price - txn.cost_basis) * txn.shares) }}{% else %}-{% endif %}</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="table-row">
+                        <p colspan="6">No transactions yet. Buy or sell to generate history.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
     
 {% endblock content %}
