@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<main class="home-main">
+    <div class="login-box">
+        <h1>Sign Up</h1>
+
+        <form action="{{ url_for('signup') }}" method="post">
+            <label for="username">Username</label><br>
+            <input type="text" id="username" name="username" placeholder="Enter your username"><br>
+
+            <label for="password">Password</label><br>
+            <input type="password" id="password" name="password" placeholder="Enter your password"><br>
+
+            <label for="confirm_password">Confirm Password</label><br>
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password"><br><br>
+
+            <button type="submit">Create account</button>
+            <a class="button" href="{{ url_for('login') }}">Back to login</a>
+        </form>
+    </div>
+</main>
+
+{% endblock content %}

@@ -5,15 +5,15 @@
     <div class="login-box">
         <h1>Login</h1>
 
-        <form>
+        <form action="{{ url_for('login') }}" method="post">
             <label for="username">Username</label><br>
             <input type="text" id="username" name="username" placeholder="Enter your username"><br>
 
             <label for="password">Password</label><br>
             <input type="password" id="password" name="password" placeholder="Enter your password"><br><br>
 
-            <button type="button">Login</button>
-            <button type="button">Signup</button>
+            <button type="submit">Login</button>
+            <a class="button" href="{{ url_for('signup') }}">Signup</a>
         </form>
     </div>
 </main>
