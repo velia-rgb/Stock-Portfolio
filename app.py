@@ -293,6 +293,11 @@ def create_portfolio():
             return redirect(url_for("create_portfolio"))
 
         user_id = current_user_id()
+        existing_portfolios = get_portfolios_for_user(user_id)
+        if any(p.name.lower() == name.lower() for p in existing_portfolios):
+            flash("Portfolio name already exists", "error")
+            return render_template("create_portfolio.html", title="Create Portfolio")
+
         portfolio = create_portfolio_db(user_id, name, cash)
         session["current_portfolio_id"] = portfolio.id
         flash(f"Portfolio '{name}' created with ${cash:.2f} cash", "success")
