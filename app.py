@@ -35,6 +35,10 @@ def login():
 def portfolio():
     return render_template("portfolio.html", title="Portfolio")
 
+# ROUTE: GET CREATE PORTFOLIO PAGE
+@app.route("/create_portfolio", methods=["GET"])
+def create_portfolio():
+    return render_template("create_portfolio.html", title="Create_Portfolio")
 # start app
 if __name__ == "__main__":
     app.run(debug=True)

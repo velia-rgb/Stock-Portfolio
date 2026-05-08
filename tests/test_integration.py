@@ -1,5 +1,5 @@
 import pytest
-from portfolio.app import create_app
+from app import app
 
 class TestConfirm:
 # test after clicking on the confirm button, page will go to the holdings url or not
@@ -19,3 +19,18 @@ class TestAddPortfolio:
         assert response.status_code == 200
         assert b"Portfolio name already exists" in response.data
         assert len(store.get_all()) == 1
+
+class TestPageLoading:
+    # Test 1: Check that the home page (root) loads correctly
+    def test_home_page_loads(self, client):
+        response = client.get("/")
+        assert response.status_code == 200
+        # You can also check for specific text on your home page
+        assert b"Welcome" in response.data 
+
+    # Test 2: Check that the portfolio page loads correctly
+    def test_portfolio_page_loads(self, client):
+        response = client.get("/portfolio")
+        assert response.status_code == 200
+        # Assuming your portfolio page has a title or header
+        assert b"Portfolio" in response.data
