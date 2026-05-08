@@ -1,15 +1,7 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>portfolio creation</title>
-    <link rel="stylesheet" href="../static/portfolio.css">
-</head>
-
-<body>
-    <div class = "creation-section">
+{% extends "layout.html" %}
+{% block content %}
+    <main>
+        <div class = "creation-section">
         <h1 class = "creation-title">This is the Create portfolio page</h1>
         <form class = "creation-box">
             <label class = "creation-box-title">Create a Portfolio</label>
@@ -33,5 +25,6 @@
            
         </form>
     </div>
-</body>
+    </main>
     
+{% endblock content %}
