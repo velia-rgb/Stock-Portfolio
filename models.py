@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime
-import requests
+# import requestsusers.db
 
 engine = create_engine("sqlite:///users.db", echo=False, future=True)
 SessionLocal = sessionmaker(bind=engine, future=True, expire_on_commit=False)
@@ -164,4 +164,23 @@ def get_current_price(symbol):
     except:
         pass
     return None  # Return None if unable to fetch
-    
+
+def delete_portfolio_db(portfolio_id):
+    with SessionLocal() as session:
+        portfolio = session.query(Portfolio).filter(
+            Portfolio.id == portfolio_id
+        ).first()
+
+        if portfolio:
+            session.delete(portfolio)
+            session.commit()
+
+def update_portfolio_name(portfolio_id, new_name):
+    with SessionLocal() as session:
+        portfolio = session.query(Portfolio).filter(
+            Portfolio.id == portfolio_id
+        ).first()
+
+        if portfolio:
+            portfolio.name = new_name
+            session.commit()

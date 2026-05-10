@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<main>
+    <div class="creation-section">
+        <h1 class="creation-title">Edit Portfolio</h1>
+
+        <form class="creation-box" method="post">
+            <label class="creation-box-title">Edit Portfolio Name</label>
+
+            <div class="creation-box-row">
+                <label class="box-row-left">Name</label>
+                <input class="box-row-right"
+                       type="text"
+                       name="portfolio-name"
+                       value="{{ portfolio.name }}"
+                       required>
+            </div>
+
+            <div class="creation-box-bottom">
+                <button type="button"
+                        class="bottom-cancel"
+                        onclick="window.location.href='{{ url_for('portfolio_list') }}'">
+                    Cancel
+                </button>
+
+                <button type="submit" class="bottom-confirm">
+                    Confirm
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+{% endblock content %}

@@ -20,6 +20,8 @@ from models import (
     sell_holding,
     record_transaction,
     get_current_price,
+    delete_portfolio_db,
+    update_portfolio_name,
 )
 
 # instantiate flask
@@ -29,7 +31,7 @@ app.config["SECRET_KEY"] = "change-this-secret-key"
 
 init_db()
 
-
+# we don't need to use session anymore, we use portfolio_id instead
 def get_current_portfolio_id():
     user_id = session.get("user_id")
     if not user_id:
@@ -95,12 +97,73 @@ def login():
             if portfolios:
                 session["current_portfolio_id"] = portfolios[0].id
             flash("Logged in successfully", "success")
-            return redirect(url_for("portfolio"))
+            return redirect(url_for("portfolio_list"))
 
         flash("Invalid username or password", "error")
         return redirect(url_for("login"))
 
     return render_template("login.html", title="Login")
+
+# ROUTE: portfolio_list page
+@app.route("/portfolio_list", methods=["GET"])
+def portfolio_list():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    portfolios = get_portfolios_for_user(session["user_id"])
+
+    return render_template(
+        "portfolio_list.html",
+        portfolios=portfolios
+    )
+
+# ROUTE: delete one portfolio
+@app.route("/portfolio/<int:portfolio_id>/delete", methods=["POST"])
+def delete_portfolio(portfolio_id):
+    if not login_required():
+        flash("Please log in first", "error")
+        return redirect(url_for("login"))
+
+    portfolio_obj = get_portfolio(portfolio_id)
+    if not portfolio_obj or portfolio_obj.user_id != session["user_id"]:
+        flash("Portfolio not found", "error")
+        return redirect(url_for("portfolio_list"))
+
+    delete_portfolio_db(portfolio_id)
+
+    flash("Portfolio deleted", "success")
+    return redirect(url_for("portfolio_list"))
+
+# ROUTE: Edit function
+@app.route("/portfolio/<int:portfolio_id>/edit", methods=["GET", "POST"])
+def edit_portfolio(portfolio_id):
+    if not login_required():
+        flash("Please log in first", "error")
+        return redirect(url_for("login"))
+
+    portfolio_obj = get_portfolio(portfolio_id)
+
+    if not portfolio_obj or portfolio_obj.user_id != session["user_id"]:
+        flash("Portfolio not found", "error")
+        return redirect(url_for("portfolio_list"))
+
+    if request.method == "POST":
+        new_name = request.form.get("portfolio-name", "").strip()
+
+        if not new_name:
+            flash("Portfolio name cannot be empty", "error")
+            return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
+
+        update_portfolio_name(portfolio_id, new_name)
+
+        flash("Portfolio name updated", "success")
+        return redirect(url_for("portfolio_list"))
+
+    return render_template(
+        "edit_portfolio.html",
+        title="Edit Portfolio",
+        portfolio=portfolio_obj
+    )
 
 # ROUTE: SIGNUP PAGE
 @app.route("/signup", methods=["GET", "POST"])
@@ -124,20 +187,20 @@ def signup():
 
         create_user(username, password)
         user = get_user_by_username(username)
-        create_portfolio_db(user.id, f"{username}'s Portfolio", 10000.0)
+        # create_portfolio_db(user.id, f"{username}'s Portfolio", 10000.0)
         flash("Account created. Please log in.", "success")
         return redirect(url_for("login"))
 
     return render_template("signup.html", title="Sign Up")
 
 # ROUTE: GET PORTFOLIO PAGE
-@app.route("/portfolio", methods=["GET"])
-def portfolio():
+@app.route("/portfolio/<int:portfolio_id>", methods=["GET"])
+def portfolio(portfolio_id):
     if not login_required():
         flash("Please log in first", "error")
         return redirect(url_for("login"))
 
-    portfolio_id = get_current_portfolio_id()
+    # portfolio_id = get_current_portfolio_id()
     if not portfolio_id:
         flash("No portfolio found", "error")
         return redirect(url_for("index"))
@@ -190,16 +253,20 @@ def portfolio():
 
 
 # ROUTE: BUY STOCKS
-@app.route("/buy", methods=["GET", "POST"])
-def buy():
+@app.route("/portfolio/<int:portfolio_id>/buy", methods=["GET", "POST"])
+def buy(portfolio_id):
     if not login_required():
         flash("Please log in first", "error")
         return redirect(url_for("login"))
 
-    portfolio_id = get_current_portfolio_id()
-    if not portfolio_id:
+    # portfolio_id = get_current_portfolio_id()
+    portfolio_obj = get_portfolio(portfolio_id)
+    if not portfolio_obj or portfolio_obj.user_id != session["user_id"]:
         flash("No portfolio found", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("portfolio_list"))
+    # if not portfolio_id:
+    #     flash("No portfolio found", "error")
+    #     return redirect(url_for("index"))
 
     if request.method == "POST":
         symbol = request.form.get("symbol", "").strip()
@@ -211,31 +278,33 @@ def buy():
             price = float(price)
         except ValueError:
             flash("Shares must be a whole number and price must be a number.", "error")
-            return redirect(url_for("buy"))
+            return redirect(url_for("buy", portfolio_id=portfolio_id))
 
         if not symbol or shares <= 0 or price <= 0:
             flash("Enter a valid symbol, positive shares, and positive price.", "error")
-            return redirect(url_for("buy"))
+            return redirect(url_for("buy", portfolio_id=portfolio_id))
 
         upsert_holding(portfolio_id, symbol, shares, price)
         record_transaction(portfolio_id, symbol, shares, price, "BUY", cost_basis=price)
         flash(f"Bought {shares} shares of {symbol.upper()} at ${price:.2f}", "success")
-        return redirect(url_for("portfolio"))
+        return redirect(url_for("portfolio", portfolio_id=portfolio_id))
 
-    return render_template("buy.html", title="Buy Stocks")
+    return render_template("buy.html", title="Buy Stocks", portfolio=portfolio_obj)
 
 
 # ROUTE: SELL STOCKS
-@app.route("/sell", methods=["GET", "POST"])
-def sell():
+@app.route("/portfolio/<int:portfolio_id>/sell", methods=["GET", "POST"])
+def sell(portfolio_id):
     if not login_required():
         flash("Please log in first", "error")
         return redirect(url_for("login"))
 
-    portfolio_id = get_current_portfolio_id()
-    if not portfolio_id:
+    # portfolio_id = get_current_portfolio_id()
+    portfolio_obj = get_portfolio(portfolio_id)
+    if not portfolio_obj or portfolio_obj.user_id != session["user_id"]:
         flash("No portfolio found", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("portfolio_list"))
+    
 
     if request.method == "POST":
         symbol = request.form.get("symbol", "").strip()
@@ -247,24 +316,24 @@ def sell():
             price = float(price)
         except ValueError:
             flash("Shares must be a whole number and price must be a number.", "error")
-            return redirect(url_for("sell"))
+            return redirect(url_for("sell",portfolio_id=portfolio_id))
 
         if not symbol or shares <= 0 or price <= 0:
             flash("Enter a valid symbol, positive shares, and positive price.", "error")
-            return redirect(url_for("sell"))
+            return redirect(url_for("sell",portfolio_id=portfolio_id))
 
         holding = get_holding(portfolio_id, symbol)
         if not holding or shares > holding.shares:
             flash("Not enough shares to sell.", "error")
-            return redirect(url_for("sell"))
+            return redirect(url_for("sell",portfolio_id=portfolio_id))
 
         cost_basis = holding.avg_price
         sell_holding(portfolio_id, symbol, shares)
         record_transaction(portfolio_id, symbol, shares, price, "SELL", cost_basis=cost_basis)
         flash(f"Sold {shares} shares of {symbol.upper()} at ${price:.2f}", "success")
-        return redirect(url_for("portfolio"))
+        return redirect(url_for("portfolio",portfolio_id=portfolio_id))
 
-    return render_template("sell.html", title="Sell Stocks")
+    return render_template("sell.html", title="Sell Stocks",portfolio=portfolio_obj)
 
 
 # ROUTE: GET CREATE PORTFOLIO PAGE
@@ -301,9 +370,10 @@ def create_portfolio():
         portfolio = create_portfolio_db(user_id, name, cash)
         session["current_portfolio_id"] = portfolio.id
         flash(f"Portfolio '{name}' created with ${cash:.2f} cash", "success")
-        return redirect(url_for("portfolio"))
+        return redirect(url_for("portfolio_list"))
 
     return render_template("create_portfolio.html", title="Create_Portfolio")
+    
 
 # ROUTE: LOGOUT
 @app.route("/logout")

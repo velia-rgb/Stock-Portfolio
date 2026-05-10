@@ -3,17 +3,13 @@
     <main class="total-section">
 
         <section class="top-sections">
-            <!-- when connected with backend, use <button></button> instead of <a></a> -->
-            <!-- <button action = "/holdings" method = "post">Add Portfolio</button> -->
-            <h1>{{ portfolio.name }}</h1>
-            <a href="{{ url_for('create_portfolio')}}" class="btn">Add Portfolio</a>            
-            <a href="/delete-portfolio" class="btn">Delete Portfolio</a>
+            <a href="{{ url_for('portfolio_list') }}" class="return-link">
+                 Return to Portfolio List
+            </a>
+
+            <h1 style="margin: 0 auto;">{{ portfolio.name }}</h1>
         </section>
-        <section class="portfolio-nav">
-            <a href="">Portfolio1</a>
-            <a href="">Portfolio2</a>
-            <a href="">Portfolio3</a>
-        </section>
+        
         <section class="summary-card">
             <div>
                 <h3>Stock Capital</h3>
@@ -32,8 +28,8 @@
             <div class="holdings-title-row">
                 <h2>Holdings</h2>
                 <div class="trade-buttons">
-                    <a href="{{ url_for('buy') }}" class="btn">Buy</a>
-                    <a href="{{ url_for('sell') }}" class="btn">Sell</a>
+                    <a href="{{ url_for('buy', portfolio_id=portfolio.id) }}" class="btn">Buy</a>
+                    <a href="{{ url_for('sell', portfolio_id=portfolio.id) }}" class="btn">Sell</a>
                 </div>
             </div>
             <div class="table">

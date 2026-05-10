@@ -3,7 +3,7 @@
 <main class="home-main">
     <div class="login-box">
         <h1>Buy Stocks</h1>
-        <form action="{{ url_for('buy') }}" method="post">
+        <form action="{{ url_for('buy', portfolio_id=portfolio.id) }}" method="post">
             <label for="symbol">Stock Symbol</label><br>
             <input type="text" id="symbol" name="symbol" placeholder="e.g. AAPL"><br>
 
@@ -14,8 +14,8 @@
             <input type="text" id="price" name="price" placeholder="e.g. 200.00"><br>
             <button type="button" onclick="fetchPrice()">Get Current Price</button><br><br>
 
-            <button type="submit">Buy</button>
-            <a class="button" href="{{ url_for('portfolio') }}">Back to portfolio</a>
+            <a href="{{ url_for('buy', portfolio_id=portfolio.id) }}" class="btn">Buy</a>
+            <a class="button" href="{{ url_for('portfolio', portfolio_id=portfolio.id) }}">Back to portfolio</a>
         </form>
     </div>
 </main>

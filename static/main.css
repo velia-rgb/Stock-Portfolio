@@ -63,7 +63,7 @@ main {
   padding: .6em;
 }
 
-/* create-portfolio section, start */
+/* create-portfolio.html, start */
 
 .creation-box {
     display: flex;
@@ -122,14 +122,15 @@ main {
     font-size: 1rem;
 }
 
-/* create-portfolio section, end */
+/* create-portfolio.html, end */
 
 
-/* holdings section, start */
+/* portfolio.html, start */
 .total-section {
     max-width: 1100px;
     margin: 40px auto;
     padding: 20px;
+    position: relative;
 }
 
 .top-sections{
@@ -201,4 +202,45 @@ main {
     background-color: #f1f1f1;
     font-weight: bold;
 }
-/* holdings section, end */
+
+.return-link {
+    position: fixed;
+
+    top: 90px;
+    left: 30px;
+
+    text-decoration: none;
+    font-weight: bold;
+    color: #2563eb;
+}
+
+.return-link:hover {
+    text-decoration: underline;
+}
+/* portfolio.html, end */
+
+/* portfolio_list.html, start */
+.small-btn {
+    display: inline-block;
+
+    background-color: #0d6efd;
+    color: white !important;
+
+    padding: 6px 14px;
+    border-radius: 8px;
+
+    text-decoration: none;
+
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.small-btn:visited {
+    color: white;
+}
+
+.small-btn:hover {
+    color: white;
+}
+/* portfolio_list.html, end */

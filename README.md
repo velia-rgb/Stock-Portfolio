@@ -1,5 +1,8 @@
 # Invest7 💹
 
+## uv run python -m pytest：run tests
+## uv run app.py: run the server
+
 ## Stock/Portfolio Tracker 📑
 
 Invest7 is a Flask web application that allows users to create a paper trading stock portfolio.
@@ -43,3 +46,4 @@ uv sync
 ```
 
 ## Work In Progress 🚧
+
