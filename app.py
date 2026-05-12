@@ -212,10 +212,14 @@ def portfolio(portfolio_id):
         flash("No portfolio found", "error")
         return redirect(url_for("index"))
 
+    portfolio_obj = get_portfolio(portfolio_id)
+    if not portfolio_obj or portfolio_obj.user_id != session["user_id"]:
+        flash("Portfolio not found", "error")
+        return redirect(url_for("portfolio_list"))
+
     holdings = get_holdings_for_portfolio(portfolio_id)
     transactions = get_transactions_for_portfolio(portfolio_id)
-    portfolio_obj = get_portfolio(portfolio_id)
-
+    
     # Fetch current prices and calculate P/L for holdings
     holdings_data = []
     total_value = 0
