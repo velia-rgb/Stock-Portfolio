@@ -142,6 +142,8 @@ def edit_portfolio(portfolio_id):
         return redirect(url_for("login"))
 
     portfolio_obj = get_portfolio(portfolio_id)
+    user_id = current_user_id()
+    existing_portfolios = get_portfolios_for_user(user_id)
 
     if not portfolio_obj or portfolio_obj.user_id != session["user_id"]:
         flash("Portfolio not found", "error")
@@ -154,6 +156,11 @@ def edit_portfolio(portfolio_id):
             flash("Portfolio name cannot be empty", "error")
             return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
 
+        if any(p.name.lower() == new_name.lower() and p.id != portfolio_id
+                for p in existing_portfolios):
+            flash("Portfolio name already exists", "error")
+            return render_template("edit_portfolio.html", title="Edit Portfolio", portfolio=portfolio_obj)
+        
         update_portfolio_name(portfolio_id, new_name)
 
         flash("Portfolio name updated", "success")
@@ -205,10 +212,14 @@ def portfolio(portfolio_id):
         flash("No portfolio found", "error")
         return redirect(url_for("index"))
 
+    portfolio_obj = get_portfolio(portfolio_id)
+    if not portfolio_obj or portfolio_obj.user_id != session["user_id"]:
+        flash("Portfolio not found", "error")
+        return redirect(url_for("portfolio_list"))
+
     holdings = get_holdings_for_portfolio(portfolio_id)
     transactions = get_transactions_for_portfolio(portfolio_id)
-    portfolio_obj = get_portfolio(portfolio_id)
-
+    
     # Fetch current prices and calculate P/L for holdings
     holdings_data = []
     total_value = 0
