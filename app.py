@@ -3,6 +3,7 @@
 - render_templates allows us to use .html pages
 - url_for allows us to directly link  back to .html pages
 '''
+import os
 from flask import Flask, render_template, url_for, request, redirect, flash, session
 from werkzeug.security import check_password_hash
 
@@ -436,4 +437,5 @@ def get_price(symbol):
 
 # start app
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
