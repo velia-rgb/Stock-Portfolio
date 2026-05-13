@@ -162,26 +162,19 @@ def edit_portfolio(portfolio_id):
 
     if request.method == "POST":
         new_name = request.form.get("portfolio-name", "").strip()
-        cash_str = request.form.get("cash-amount", "").strip()
 
         if not new_name:
             flash("Portfolio name cannot be empty", "error")
             return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
 
-        try:
-            new_cash = float(cash_str)
-        except ValueError:
-            flash("Cash amount must be a number", "error")
-            return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
-
-        if new_cash < 0:
-            flash("Cash amount cannot be negative", "error")
-            return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
+        if any(p.name.lower() == new_name.lower() and p.id != portfolio_id
+                for p in existing_portfolios):
+            flash("Portfolio name already exists", "error")
+            return render_template("edit_portfolio.html", title="Edit Portfolio", portfolio=portfolio_obj)
 
         update_portfolio_name(portfolio_id, new_name)
-        update_portfolio_cash(portfolio_id, new_cash - portfolio_obj.cash)
 
-        flash("Portfolio updated", "success")
+        flash("Portfolio name updated", "success")
         return redirect(url_for("portfolio_list"))
 
     return render_template(
