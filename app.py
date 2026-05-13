@@ -3,6 +3,7 @@
 - render_templates allows us to use .html pages
 - url_for allows us to directly link  back to .html pages
 '''
+import os
 from flask import Flask, render_template, url_for, request, redirect, flash, session
 from werkzeug.security import check_password_hash
 
@@ -161,26 +162,19 @@ def edit_portfolio(portfolio_id):
 
     if request.method == "POST":
         new_name = request.form.get("portfolio-name", "").strip()
-        cash_str = request.form.get("cash-amount", "").strip()
 
         if not new_name:
             flash("Portfolio name cannot be empty", "error")
             return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
 
-        try:
-            new_cash = float(cash_str)
-        except ValueError:
-            flash("Cash amount must be a number", "error")
-            return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
-
-        if new_cash < 0:
-            flash("Cash amount cannot be negative", "error")
-            return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
+        if any(p.name.lower() == new_name.lower() and p.id != portfolio_id
+                for p in existing_portfolios):
+            flash("Portfolio name already exists", "error")
+            return render_template("edit_portfolio.html", title="Edit Portfolio", portfolio=portfolio_obj)
 
         update_portfolio_name(portfolio_id, new_name)
-        update_portfolio_cash(portfolio_id, new_cash - portfolio_obj.cash)
 
-        flash("Portfolio updated", "success")
+        flash("Portfolio name updated", "success")
         return redirect(url_for("portfolio_list"))
 
     return render_template(
@@ -436,4 +430,5 @@ def get_price(symbol):
 
 # start app
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)

@@ -12,6 +12,7 @@
     <table class="portfolio-table">
         <thead>
             <tr>
+                <th>ID</th>
                 <th>Name</th>
                 <th>Cash</th>
                 <th>Details</th>
@@ -24,6 +25,7 @@
         {% for portfolio in portfolios %}
 
             <tr>
+                <td>{{ portfolio.id }}</td>
                 <td>{{ portfolio.name }}</td>
 
                 <td>${{ "%.2f"|format(portfolio.cash) }}</td>
