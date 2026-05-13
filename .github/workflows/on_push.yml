@@ -1,0 +1,50 @@
+name: Test and Auto-PR
+
+on:
+  push:
+    branches:
+      - develop  # Runs whenever you push to develop
+
+jobs:
+  test-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv and sync dependencies
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          uv sync --frozen
+
+      - name: Run tests with pytest
+        run: |
+          # The fix for the ModuleNotFoundError seen in image_1e7c57.png
+          export PYTHONPATH=$PYTHONPATH:.
+          uv run pytest
+
+  create-pull-request:
+    needs: test-and-verify
+    runs-on: ubuntu-latest
+    if: success()
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Pull Request to Main
+        run: |
+          gh pr create \
+            --base main \
+            --head develop \
+            --title "🚀 Automated PR: Develop to Main" \
+            --body "This PR was generated automatically after all tests passed on the develop branch."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
