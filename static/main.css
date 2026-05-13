@@ -3,6 +3,50 @@ html, body {
   margin: 0;
 }
 
+/* Flash Messages */
+.flash-messages {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  gap: 10px;
+}
+
+.flash {
+  text-align: center;
+  padding: 16px 32px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.flash-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.flash-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.flash-warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+.flash-info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
 .home-body {
   display: flex;
   flex-direction: column;
@@ -243,4 +287,53 @@ main {
 .small-btn:hover {
     color: white;
 }
+
+.portfolio-list-page {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.portfolio-list-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+    gap: 20px;
+}
+
+.portfolio-list-header h1 {
+    margin: 0;
+    flex: 1;
+    text-align: center;
+}
+
+.portfolio-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.portfolio-table thead {
+    background-color: #f1f1f1;
+}
+
+.portfolio-table th,
+.portfolio-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.portfolio-table th {
+    font-weight: bold;
+    background-color: #f1f1f1;
+}
+
+.portfolio-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
 /* portfolio_list.html, end */

@@ -14,7 +14,7 @@
             <input type="text" id="price" name="price" placeholder="e.g. 200.00"><br>
             <button type="button" onclick="fetchPrice()">Get Current Price</button><br><br>
 
-            <a href="{{ url_for('buy', portfolio_id=portfolio.id) }}" class="btn">Buy</a>
+            <button type="submit" class="btn">Buy</button>
             <a class="button" href="{{ url_for('portfolio', portfolio_id=portfolio.id) }}">Back to portfolio</a>
         </form>
     </div>

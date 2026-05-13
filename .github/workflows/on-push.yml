@@ -1,0 +1,59 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flask pytest sqlalchemy werkzeug requests
+
+    - name: Run tests
+      run: |
+        PYTHONPATH=${{ github.workspace }} pytest
+
+  create-pull-request:
+    needs: build
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.RENDER_DEPLOY_URL }}
+        branch: dev-to-main-pr
+        base: main
+        head: dev
+        title: 'Automated PR: Dev branch updates'
+        body: |
+          This PR was automatically created after successful test runs on the dev branch.
+
+          ## Changes
+          - Automated merge from dev to main after CI passed
+
+          ## Testing
+          - All tests passed in the build job
+        labels: |
+          automated
+          dev-to-main
