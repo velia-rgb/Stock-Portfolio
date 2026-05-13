@@ -2,6 +2,7 @@
 
 ## uv run python -m pytest：run tests
 ## uv run app.py: run the server
+##
 
 ## Stock/Portfolio Tracker 📑
 
