@@ -1,0 +1,36 @@
+# Install Python dependencies, run tests and lint with a single version of Python
+name: Test Python Application
+
+on:
+  push:
+    branches: [ "develop" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.13"
+    - name: Install dependencies
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh && uv sync --frozen
+    - name: Test with pytest
+      run: |
+        uv run pytest
+  create-pull-request:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create Pull Request
+        run: gh pr create -B main -H ${{ github.ref_name }} --title "Merge ${{ github.ref_name }} into main" --body "Automatic PR from Github Actions"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
