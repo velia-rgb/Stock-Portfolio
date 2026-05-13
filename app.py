@@ -22,6 +22,7 @@ from models import (
     get_current_price,
     delete_portfolio_db,
     update_portfolio_name,
+    update_portfolio_cash,
 )
 
 # instantiate flask
@@ -129,9 +130,18 @@ def delete_portfolio(portfolio_id):
         flash("Portfolio not found", "error")
         return redirect(url_for("portfolio_list"))
 
-    delete_portfolio_db(portfolio_id)
+    if delete_portfolio_db(portfolio_id):
+        if session.get("current_portfolio_id") == portfolio_id:
+            remaining = get_portfolios_for_user(session["user_id"])
+            if remaining:
+                session["current_portfolio_id"] = remaining[0].id
+            else:
+                session.pop("current_portfolio_id", None)
 
-    flash("Portfolio deleted", "success")
+        flash("Portfolio deleted", "success")
+    else:
+        flash("Could not delete portfolio", "error")
+
     return redirect(url_for("portfolio_list"))
 
 # ROUTE: Edit function
@@ -151,19 +161,26 @@ def edit_portfolio(portfolio_id):
 
     if request.method == "POST":
         new_name = request.form.get("portfolio-name", "").strip()
+        cash_str = request.form.get("cash-amount", "").strip()
 
         if not new_name:
             flash("Portfolio name cannot be empty", "error")
             return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
 
-        if any(p.name.lower() == new_name.lower() and p.id != portfolio_id
-                for p in existing_portfolios):
-            flash("Portfolio name already exists", "error")
-            return render_template("edit_portfolio.html", title="Edit Portfolio", portfolio=portfolio_obj)
-        
-        update_portfolio_name(portfolio_id, new_name)
+        try:
+            new_cash = float(cash_str)
+        except ValueError:
+            flash("Cash amount must be a number", "error")
+            return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
 
-        flash("Portfolio name updated", "success")
+        if new_cash < 0:
+            flash("Cash amount cannot be negative", "error")
+            return redirect(url_for("edit_portfolio", portfolio_id=portfolio_id))
+
+        update_portfolio_name(portfolio_id, new_name)
+        update_portfolio_cash(portfolio_id, new_cash - portfolio_obj.cash)
+
+        flash("Portfolio updated", "success")
         return redirect(url_for("portfolio_list"))
 
     return render_template(
@@ -250,7 +267,13 @@ def portfolio(portfolio_id):
                 'pl': None
             })
 
-    total_pl = total_value - total_cost if total_value else 0
+    realized_pl = sum(
+        (txn.price - txn.cost_basis) * txn.shares
+        for txn in transactions
+        if txn.type == "SELL" and txn.cost_basis is not None
+    )
+    unrealized_pl = total_value - total_cost
+    total_pl = realized_pl + unrealized_pl
 
     return render_template(
         "portfolio.html",
@@ -295,8 +318,14 @@ def buy(portfolio_id):
             flash("Enter a valid symbol, positive shares, and positive price.", "error")
             return redirect(url_for("buy", portfolio_id=portfolio_id))
 
+        total_cost = shares * price
+        if total_cost > portfolio_obj.cash:
+            flash("Insufficient cash to buy the requested shares.", "error")
+            return redirect(url_for("buy", portfolio_id=portfolio_id))
+
         upsert_holding(portfolio_id, symbol, shares, price)
         record_transaction(portfolio_id, symbol, shares, price, "BUY", cost_basis=price)
+        update_portfolio_cash(portfolio_id, -total_cost)
         flash(f"Bought {shares} shares of {symbol.upper()} at ${price:.2f}", "success")
         return redirect(url_for("portfolio", portfolio_id=portfolio_id))
 
@@ -339,7 +368,9 @@ def sell(portfolio_id):
             return redirect(url_for("sell",portfolio_id=portfolio_id))
 
         cost_basis = holding.avg_price
+        proceeds = shares * price
         sell_holding(portfolio_id, symbol, shares)
+        update_portfolio_cash(portfolio_id, proceeds)
         record_transaction(portfolio_id, symbol, shares, price, "SELL", cost_basis=cost_basis)
         flash(f"Sold {shares} shares of {symbol.upper()} at ${price:.2f}", "success")
         return redirect(url_for("portfolio",portfolio_id=portfolio_id))

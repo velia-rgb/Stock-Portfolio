@@ -30,7 +30,10 @@ class TestPageLoading:
         assert response.status_code == 200
         assert b"Welcome" in response.data
 
-    def test_portfolio_page_loads(self, logged_in_client):
-        response = logged_in_client.get("/portfolio")
+    def test_portfolio_page_loads(self, logged_in_client, test_user):
+        portfolios = get_portfolios_for_user(test_user["id"])
+        assert len(portfolios) > 0
+        portfolio_id = portfolios[0].id
+        response = logged_in_client.get(f"/portfolio/{portfolio_id}")
         assert response.status_code == 200
         assert b"Portfolio" in response.data

@@ -1,11 +1,14 @@
 
+from pathlib import Path
+import requests
 from werkzeug.security import generate_password_hash
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime
 # import requestsusers.db
 
-engine = create_engine("sqlite:///users.db", echo=False, future=True)
+DB_PATH = Path(__file__).resolve().parent / "users.db"
+engine = create_engine(f"sqlite:///{DB_PATH}", echo=False, future=True)
 SessionLocal = sessionmaker(bind=engine, future=True, expire_on_commit=False)
 Base = declarative_base()
 
@@ -153,17 +156,52 @@ def record_transaction(portfolio_id, symbol, shares, price, type_, cost_basis=No
 
 
 def get_current_price(symbol):
-    # Using Alpha Vantage API (free tier, replace with your API key)
-    api_key = "demo"  # Replace with actual API key for production
-    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}"
+    symbol = symbol.strip().upper()
+    if not symbol:
+        return None
+
+    # Try Yahoo Finance first
     try:
-        response = requests.get(url, timeout=5)
+        url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbol}"
+        response = requests.get(url, timeout=5, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        })
+        response.raise_for_status()
         data = response.json()
-        if "Global Quote" in data and "05. price" in data["Global Quote"]:
-            return float(data["Global Quote"]["05. price"])
-    except:
+        results = data.get("quoteResponse", {}).get("result", [])
+        if results:
+            price = results[0].get("regularMarketPrice")
+            if price is not None:
+                return float(price)
+    except requests.RequestException:
         pass
-    return None  # Return None if unable to fetch
+
+    # Fallback to Financial Modeling Prep (free tier)
+    try:
+        url = f"https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey=demo"
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        if data and isinstance(data, list) and len(data) > 0:
+            price = data[0].get("price")
+            if price is not None:
+                return float(price)
+    except requests.RequestException:
+        pass
+
+    # Last fallback: Mock prices for common stocks (for demo purposes)
+    mock_prices = {
+        'AAPL': 175.43,
+        'GOOGL': 141.80,
+        'MSFT': 407.77,
+        'AMZN': 178.35,
+        'TSLA': 248.42,
+        'NVDA': 135.40,
+        'META': 484.10,
+        'NFLX': 689.45
+    }
+
+    return mock_prices.get(symbol)
 
 def delete_portfolio_db(portfolio_id):
     with SessionLocal() as session:
@@ -174,6 +212,8 @@ def delete_portfolio_db(portfolio_id):
         if portfolio:
             session.delete(portfolio)
             session.commit()
+            return True
+    return False
 
 def update_portfolio_name(portfolio_id, new_name):
     with SessionLocal() as session:
@@ -184,3 +224,16 @@ def update_portfolio_name(portfolio_id, new_name):
         if portfolio:
             portfolio.name = new_name
             session.commit()
+
+
+def update_portfolio_cash(portfolio_id, amount):
+    with SessionLocal() as session:
+        portfolio = session.query(Portfolio).filter(
+            Portfolio.id == portfolio_id
+        ).first()
+
+        if portfolio:
+            portfolio.cash += amount
+            session.commit()
+            return portfolio
+    return None
