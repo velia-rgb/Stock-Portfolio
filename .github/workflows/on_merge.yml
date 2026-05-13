@@ -1,6 +1,4 @@
 # Deploy to Render
-name: Deploy Python Application
-
 on:
   pull_request:
     branches:
