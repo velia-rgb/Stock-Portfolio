@@ -24,11 +24,11 @@ jobs:
           pip install flask pytest sqlalchemy werkzeug requests
 
       - name: Run tests
-        run: |
+        run: | 
           PYTHONPATH=${{ github.workspace }} pytest
 
   create-pull-request:
-    needs: build
+    needs: build 
     runs-on: ubuntu-latest
     if: success()
 
