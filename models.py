@@ -1,5 +1,6 @@
 
 from pathlib import Path
+import os
 import requests
 from werkzeug.security import generate_password_hash
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, DateTime
@@ -159,6 +160,20 @@ def get_current_price(symbol):
     symbol = symbol.strip().upper()
     if not symbol:
         return None
+
+    # Try Finnhub first if API key is configured.
+    finnhub_api_key = os.getenv("FINNHUB_API_KEY")
+    if finnhub_api_key:
+        try:
+            url = f"https://finnhub.io/api/v1/quote?symbol={symbol}&token={finnhub_api_key}"
+            response = requests.get(url, timeout=5)
+            response.raise_for_status()
+            data = response.json()
+            price = data.get("c") if isinstance(data, dict) else None
+            if price is not None and float(price) > 0:
+                return float(price)
+        except (requests.RequestException, ValueError, TypeError):
+            pass
 
     # Try Yahoo Finance first
     try:
